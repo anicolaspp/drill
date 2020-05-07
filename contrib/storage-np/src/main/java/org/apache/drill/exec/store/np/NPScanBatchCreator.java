@@ -8,13 +8,19 @@ import org.apache.drill.exec.physical.impl.BatchCreator;
 import org.apache.drill.exec.physical.impl.scan.framework.ManagedReader;
 import org.apache.drill.exec.physical.impl.scan.framework.ManagedScanFramework;
 import org.apache.drill.exec.physical.impl.scan.framework.SchemaNegotiator;
+import org.apache.drill.exec.physical.resultSet.ResultSetLoader;
+import org.apache.drill.exec.physical.resultSet.RowSetLoader;
 import org.apache.drill.exec.record.CloseableRecordBatch;
 import org.apache.drill.exec.record.RecordBatch;
 import org.apache.drill.exec.server.options.OptionManager;
 import org.apache.drill.exec.store.np.scan.NPSubScan;
+import org.apache.drill.exec.vector.complex.impl.VectorContainerWriter;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import org.ojai.Document;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 public class NPScanBatchCreator implements BatchCreator<NPSubScan> {
 
@@ -23,8 +29,8 @@ public class NPScanBatchCreator implements BatchCreator<NPSubScan> {
         Preconditions.checkArgument(children.isEmpty());
 
 
-       return createBuilder(context.getOptions(), subScan)
-               .buildScanOperator(context, subScan);
+        return createBuilder(context.getOptions(), subScan)
+                .buildScanOperator(context, subScan);
     }
 
     private ManagedScanFramework.ScanFrameworkBuilder createBuilder(OptionManager optionValues,
@@ -57,14 +63,37 @@ public class NPScanBatchCreator implements BatchCreator<NPSubScan> {
         @Override
         public ManagedReader<? extends SchemaNegotiator> next() {
             return new ManagedReader<SchemaNegotiator>() {
+                private ResultSetLoader loader;
+
+                private final Random random = new Random();
+
+                VectorContainerWriter writer;
+
+                int count = 0;
+
                 @Override
                 public boolean open(SchemaNegotiator negotiator) {
-                    return false;
+
+                    loader = negotiator.build();
+
+                    writer = new VectorContainerWriter()
+
+                    return true;
                 }
 
                 @Override
                 public boolean next() {
-                    return false;
+
+                    List<Document> documents = new ArrayList<>();
+
+
+                    while (!rowWriter.isFull()) {
+                        rowWriter.start();
+                        rowWriter.addRow(random.nextInt(), random.nextInt(), random.nextLong());
+                        rowWriter.save();
+                    }
+
+                    return count <= 10;
                 }
 
                 @Override
