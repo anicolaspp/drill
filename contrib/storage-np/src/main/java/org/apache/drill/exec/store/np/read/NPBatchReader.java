@@ -12,38 +12,38 @@ import java.io.InputStream;
  * Responsible for read a batch of data from the source
  */
 public class NPBatchReader implements ManagedReader<SchemaNegotiator> {
-    
+
     private NPSubScan subScan;
-    
+
     private JsonLoader jsonLoader;
-    
+
     public NPBatchReader(NPSubScan subScan) {
         this.subScan = subScan;
     }
-    
+
     @Override
     public boolean open(SchemaNegotiator negotiator) {
-        RandomRowGenerator dataGen = new RandomRowGenerator();
-        
+        RowGenerator dataGen = new OJAIRowGenerator(subScan);
+
         InputStream inStream = dataGen.getRowsInputStream();
-        
+
         jsonLoader = new JsonLoaderImpl.JsonLoaderBuilder()
                 .resultSetLoader(negotiator.build())
                 .standardOptions(negotiator.queryOptions())
 //                    .dataPath(subScan.tableSpec().connectionConfig().dataPath())
                 .fromStream(inStream)
                 .build();
-        
+
         return true;
     }
-    
+
     @Override
     public boolean next() {
         System.out.println("NPBatchReader:next invoked...");
-        
+
         return jsonLoader.readBatch();
     }
-    
+
     @Override
     public void close() {
         if (jsonLoader != null) {

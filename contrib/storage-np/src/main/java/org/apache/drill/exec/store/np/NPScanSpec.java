@@ -8,9 +8,12 @@ import org.apache.drill.common.PlanStringBuilder;
 @JsonTypeName("np-scan-spec")
 public class NPScanSpec {
     private final String tableName;
+    private NPStoragePluginConfig pluginConfig;
 
     @JsonCreator
-    public NPScanSpec(@JsonProperty("tableName") String tableName) {
+    public NPScanSpec(@JsonProperty("tableName") String tableName,
+                      @JsonProperty("config") NPStoragePluginConfig pluginConfig) {
+        this.pluginConfig = pluginConfig;
         System.out.println("Creating NP SCAN SPEC");
         this.tableName = tableName;
     }
@@ -21,6 +24,11 @@ public class NPScanSpec {
         return tableName;
     }
 
+
+    @JsonProperty("config")
+    public NPStoragePluginConfig getPluginConfig() {
+        return pluginConfig;
+    }
 
     @Override
     public String toString() {

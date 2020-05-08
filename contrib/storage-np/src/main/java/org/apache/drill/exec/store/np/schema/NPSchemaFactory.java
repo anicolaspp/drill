@@ -58,8 +58,13 @@ public class NPSchemaFactory extends AbstractSchemaFactory {
 
             // TODO: check if the table exists in MFS and register it accordingly
 
-            return registerTable(name, new DynamicDrillTable(plugin, plugin.getName(), new NPScanSpec(name)));
-
+            return registerTable(name,
+                    new DynamicDrillTable(
+                            plugin,
+                            plugin.getName(),
+                            new NPScanSpec(name, (NPStoragePluginConfig) plugin.getConfig())
+                    )
+            );
         }
 
         private DynamicDrillTable registerTable(String name, DynamicDrillTable table) {

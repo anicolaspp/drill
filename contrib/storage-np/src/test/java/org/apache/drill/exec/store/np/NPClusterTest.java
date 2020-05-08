@@ -10,6 +10,9 @@ import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 
+/**
+ * This Test class only test that the plugin starts and random data can be read.
+ */
 public class NPClusterTest extends ClusterTest {
 
     @ClassRule
@@ -38,7 +41,10 @@ public class NPClusterTest extends ClusterTest {
         String sql = "SELECT a from np.my_table";
 
         QueryBuilder builder = client.queryBuilder().sql(sql);
-    
+
         builder.printCsv();
+
+        assert true;
     }
 }
+
