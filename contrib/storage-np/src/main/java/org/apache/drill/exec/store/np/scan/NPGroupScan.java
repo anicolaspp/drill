@@ -125,6 +125,8 @@ public class NPGroupScan extends AbstractGroupScan {
         return new NPGroupScan(this, columns);
     }
 
+
+
     @Override
     public String toString() {
         return new PlanStringBuilder(this)

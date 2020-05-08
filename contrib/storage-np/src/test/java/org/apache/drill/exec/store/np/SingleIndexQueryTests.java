@@ -1,6 +1,7 @@
 package org.apache.drill.exec.store.np;
 
 import com.github.anicolaspp.ojai.JavaOjaiTesting;
+import com.mapr.db.impl.MapRDBImpl;
 import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.np.ojai.SmartConnectionProvider;
@@ -94,6 +95,8 @@ public class SingleIndexQueryTests extends ClusterTest {
 
             index.insert(indexed);
         }
+
+        com.mapr.db.MapRDB.getTable("").getMetaTable().getScanRanges()
     }
 
     @Test
