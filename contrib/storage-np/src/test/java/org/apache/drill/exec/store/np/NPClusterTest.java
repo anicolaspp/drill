@@ -35,10 +35,10 @@ public class NPClusterTest extends ClusterTest {
 
     @Test
     public void testWildCard() throws Exception {
-        String sql = "SELECT * from np.my_table";
+        String sql = "SELECT a from np.my_table";
 
         QueryBuilder builder = client.queryBuilder().sql(sql);
-
-        builder.print();
+    
+        builder.printCsv();
     }
 }
