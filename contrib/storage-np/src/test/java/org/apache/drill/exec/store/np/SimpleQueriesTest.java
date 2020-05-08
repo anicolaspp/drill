@@ -1,10 +1,12 @@
 package org.apache.drill.exec.store.np;
 
 import com.github.anicolaspp.ojai.JavaOjaiTesting;
+import org.apache.drill.common.exceptions.UserRemoteException;
 import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.physical.rowSet.DirectRowSet;
 import org.apache.drill.exec.physical.rowSet.RowSet;
 import org.apache.drill.exec.physical.rowSet.RowSetBuilder;
+import org.apache.drill.exec.proto.UserBitShared;
 import org.apache.drill.exec.record.metadata.SchemaBuilder;
 import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.rpc.RpcException;
@@ -23,10 +25,13 @@ import org.ojai.Document;
 import org.ojai.store.Connection;
 import org.ojai.store.DocumentStore;
 
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 /**
  * For testing wild card test against in-memory store
  */
-public class WildCardTest extends ClusterTest {
+public class SimpleQueriesTest extends ClusterTest {
     @ClassRule
     public static final BaseDirTestWatcher dirTestWatcher = new BaseDirTestWatcher();
 
@@ -96,6 +101,44 @@ public class WildCardTest extends ClusterTest {
                 .addRow("0", 0)
                 .addRow("1", 1)
                 .build();
+
+        RowSetUtilities.verify(expected, result);
+    }
+
+    @Test
+    public void testReadFromValidTables() throws Exception {
+        String sql = "SELECT * FROM np.`/non-existing-table`";
+
+        try {
+            client.queryBuilder().sql(sql).run();
+
+            fail();
+        } catch (UserRemoteException e) {
+            String msg = e.getMessage();
+
+            assert e.getErrorType() == UserBitShared.DrillPBError.ErrorType.VALIDATION;
+            assertTrue(msg.contains("'/non-existing-table' not found within 'np'"));
+        }
+    }
+
+    @Test
+    public void testSelfJoin() throws Exception {
+        String sql =
+                "SELECT a._id, b.value " +
+                        "FROM np.`/user/store1` a inner join np.`/user/store1` b " +
+                        "ON a._id = b._id "+
+                        "WHERE a.value = 5";
+
+        TupleMetadata expectedSchema = new SchemaBuilder()
+                .add("_id", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+                .add("value", TypeProtos.MinorType.BIGINT, TypeProtos.DataMode.OPTIONAL)
+                .buildSchema();
+
+        RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+                .addRow("5", 5)
+                .build();
+
+        DirectRowSet result = client.queryBuilder().sql(sql).rowSet();
 
         RowSetUtilities.verify(expected, result);
     }

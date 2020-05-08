@@ -8,6 +8,11 @@ import org.ojai.store.DocumentStore;
 
 import java.util.Iterator;
 
+/**
+ * In charge of querying the OJAI source and returning Documents.
+ *
+ * We might want to have one of this per each Table Region (tablet).
+ */
 public class OJAIRowGenerator implements RowGenerator<Document>, ConnectionProvider {
 
     private final Connection connection;
