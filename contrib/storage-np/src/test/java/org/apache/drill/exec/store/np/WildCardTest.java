@@ -77,12 +77,24 @@ public class WildCardTest extends ClusterTest {
 
     @Test
     public void testProjections() throws RpcException {
-        String sql = "SELECT _id FROM np.`/user/store1`";
+        String sql = "SELECT * FROM np.`/user/store1` ORDER BY value LIMIT 2";
 
-        QueryBuilder builder = client.queryBuilder().sql(sql);
+        DirectRowSet result = client.queryBuilder().sql(sql).rowSet();
 
-        DirectRowSet directRowSet = builder.rowSet();
+        result.print();
+//
 
-        assert directRowSet.schema().size() == 1;
+
+//        TupleMetadata expectedSchema = new SchemaBuilder()
+//                .add("_id", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+//                .add("value", TypeProtos.MinorType.BIGINT, TypeProtos.DataMode.OPTIONAL)
+//                .buildSchema();
+//
+//        RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+//                .addRow("0", 0)
+//                .addRow("1", 1)
+//                .build();
+//
+//        RowSetUtilities.verify(expected, result);
     }
 }
