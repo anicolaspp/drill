@@ -18,6 +18,7 @@ import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterTest;
 import org.apache.drill.test.QueryBuilder;
 import org.apache.drill.test.rowSet.RowSetUtilities;
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -76,6 +77,13 @@ public class SimpleQueriesTest extends ClusterTest {
         }
     }
 
+    @AfterClass
+    public static void cleanData() {
+        SmartConnectionProvider
+                .getInstance()
+                .connectTo("ojai:anicolaspp:mem")
+                .close();
+    }
 
     @Test
     public void testReadAllRecords() throws Exception {
@@ -143,3 +151,4 @@ public class SimpleQueriesTest extends ClusterTest {
         RowSetUtilities.verify(expected, result);
     }
 }
+
