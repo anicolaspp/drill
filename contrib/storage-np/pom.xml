@@ -62,6 +62,12 @@
       <version>3.0-mapr-1808</version>
     </dependency>
 
+    <dependency>
+      <groupId>com.github.anicolaspp</groupId>
+      <artifactId>ojai-testing_2.12</artifactId>
+      <version>1.0.12</version>
+    </dependency>
+
     <!-- Test dependencie -->
     <dependency>
       <groupId>org.apache.drill.exec</groupId>
