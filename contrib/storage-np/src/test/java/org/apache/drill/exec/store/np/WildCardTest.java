@@ -1,7 +1,12 @@
 package org.apache.drill.exec.store.np;
 
 import com.github.anicolaspp.ojai.JavaOjaiTesting;
+import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.physical.rowSet.DirectRowSet;
+import org.apache.drill.exec.physical.rowSet.RowSet;
+import org.apache.drill.exec.physical.rowSet.RowSetBuilder;
+import org.apache.drill.exec.record.metadata.SchemaBuilder;
+import org.apache.drill.exec.record.metadata.TupleMetadata;
 import org.apache.drill.exec.rpc.RpcException;
 import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.store.StoragePluginRegistry;
@@ -10,6 +15,7 @@ import org.apache.drill.test.BaseDirTestWatcher;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterTest;
 import org.apache.drill.test.QueryBuilder;
+import org.apache.drill.test.rowSet.RowSetUtilities;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -81,20 +87,16 @@ public class WildCardTest extends ClusterTest {
 
         DirectRowSet result = client.queryBuilder().sql(sql).rowSet();
 
-        result.print();
-//
+        TupleMetadata expectedSchema = new SchemaBuilder()
+                .add("_id", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
+                .add("value", TypeProtos.MinorType.BIGINT, TypeProtos.DataMode.OPTIONAL)
+                .buildSchema();
 
+        RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
+                .addRow("0", 0)
+                .addRow("1", 1)
+                .build();
 
-//        TupleMetadata expectedSchema = new SchemaBuilder()
-//                .add("_id", TypeProtos.MinorType.VARCHAR, TypeProtos.DataMode.OPTIONAL)
-//                .add("value", TypeProtos.MinorType.BIGINT, TypeProtos.DataMode.OPTIONAL)
-//                .buildSchema();
-//
-//        RowSet expected = new RowSetBuilder(client.allocator(), expectedSchema)
-//                .addRow("0", 0)
-//                .addRow("1", 1)
-//                .build();
-//
-//        RowSetUtilities.verify(expected, result);
+        RowSetUtilities.verify(expected, result);
     }
 }
