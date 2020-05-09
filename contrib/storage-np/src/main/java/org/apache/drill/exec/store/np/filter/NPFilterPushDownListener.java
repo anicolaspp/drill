@@ -2,13 +2,17 @@ package org.apache.drill.exec.store.np.filter;
 
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.util.Pair;
-import org.apache.drill.common.types.TypeProtos;
 import org.apache.drill.exec.physical.base.GroupScan;
 import org.apache.drill.exec.store.http.filter.ExprNode;
+import org.apache.drill.exec.store.http.filter.ExprNode.ColRelOpConstNode;
 import org.apache.drill.exec.store.http.filter.FilterPushDownListener;
+import org.apache.drill.exec.store.http.filter.RelOp;
 import org.apache.drill.exec.store.np.scan.NPGroupScan;
 
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class NPFilterPushDownListener implements FilterPushDownListener {
     
@@ -67,30 +71,21 @@ public class NPFilterPushDownListener implements FilterPushDownListener {
     
     static class NPScanPushDownListener implements ScanPushDownListener {
     
-        private NPGroupScan scan;
+        private final NPGroupScan scan;
     
         public NPScanPushDownListener(NPGroupScan scan) {
-        
             this.scan = scan;
         }
-    
-        /**
-         * Determine if the given relational operator (which is already in the form
-         * {@code <col name> <relop> <const>}, qualifies for push down for
-         * this scan.
-         * <p>
-         * If so, return an equivalent RelOp with the value normalized to what
-         * the plugin needs. The returned value may be the same as the original
-         * one if the value is already normalized.
-         *
-         * @param conjunct@return a normalized RelOp if this relop can be transformed into a filter
-         *                        push-down, @{code null} if not and thus the relop should remain in
-         *                        the Drill plan
-         * @see {@link ConstantHolder#normalize(TypeProtos.MinorType)}
-         */
+        
         @Override
         public ExprNode accept(ExprNode conjunct) {
-            return null;
+           if (conjunct instanceof ColRelOpConstNode) {
+               ColRelOpConstNode node = (ColRelOpConstNode) conjunct;
+               
+               return node.op == RelOp.EQ? node : null;
+           }
+           
+           return null;
         }
     
         /**
@@ -108,7 +103,8 @@ public class NPFilterPushDownListener implements FilterPushDownListener {
          * to leave in the query. Those terms can be the ones passed in, or
          * new terms to handle special needs.
          *
-         * @param expr@return a pair of elements: a new scan (that represents the pushed filters),
+         * @param expr
+         * @return a pair of elements: a new scan (that represents the pushed filters),
          *                    and the original or new expression to appear in the WHERE clause
          *                    joined by AND with any non-candidate expressions. That is, if analysis
          *                    determines that the plugin can't handle (or cannot completely handle)
@@ -121,7 +117,14 @@ public class NPFilterPushDownListener implements FilterPushDownListener {
          */
         @Override
         public Pair<GroupScan, List<RexNode>> transform(ExprNode.AndNode expr) {
-            return null;
+            ColRelOpConstNode relOp = (ColRelOpConstNode) expr.children.get(0);
+            
+            Map<String, String> filters = new HashMap<>();
+            
+            filters.put(relOp.colName, relOp.value.value.toString());
+            
+            GroupScan groupScanWithFilters = new NPGroupScan(scan, scan.getColumns(), filters);
+            return Pair.of(groupScanWithFilters, Collections.emptyList());
         }
     }
 }

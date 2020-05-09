@@ -7,6 +7,7 @@ import org.apache.drill.exec.store.np.ojai.SmartConnectionProvider;
 import org.apache.drill.test.BaseDirTestWatcher;
 import org.apache.drill.test.ClusterFixture;
 import org.apache.drill.test.ClusterTest;
+import org.apache.drill.test.QueryBuilder;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -96,8 +97,12 @@ public class SingleIndexQueryTests extends ClusterTest {
 
     @Test
     public void testFilterPushDownToIndex() throws Exception {
-        String sql = "SELECT * FROM np.`/user/main` WHERE value = 5";
+        String sql = "SELECT _id FROM np.`/user/main` WHERE value = 5";
     
-        System.out.println(client.queryBuilder().sql(sql).explainText());
+        QueryBuilder builder = client.queryBuilder().sql(sql);
+    
+//        System.out.println(builder.explainText());
+    
+        builder.print();
     }
 }
