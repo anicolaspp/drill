@@ -1,7 +1,6 @@
 package org.apache.drill.exec.store.np;
 
 import com.github.anicolaspp.ojai.JavaOjaiTesting;
-import com.mapr.db.impl.MapRDBImpl;
 import org.apache.drill.exec.server.Drillbit;
 import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.np.ojai.SmartConnectionProvider;
@@ -16,8 +15,6 @@ import org.ojai.store.Connection;
 import org.ojai.store.DocumentStore;
 
 import java.util.Iterator;
-
-import static org.junit.Assert.fail;
 
 /**
  * This class tests that our plugin loads table using the defined indexing architecture.
@@ -95,14 +92,12 @@ public class SingleIndexQueryTests extends ClusterTest {
 
             index.insert(indexed);
         }
-
-        com.mapr.db.MapRDB.getTable("").getMetaTable().getScanRanges()
     }
 
     @Test
-    public void testFilterPushDownToIndex() {
+    public void testFilterPushDownToIndex() throws Exception {
         String sql = "SELECT * FROM np.`/user/main` WHERE value = 5";
-
-        fail();
+    
+        System.out.println(client.queryBuilder().sql(sql).explainText());
     }
 }
