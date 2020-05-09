@@ -18,11 +18,9 @@ import org.apache.drill.exec.planner.logical.DrillScanRel;
 import org.apache.drill.exec.proto.CoordinationProtos;
 import org.apache.drill.exec.store.np.NPScanSpec;
 import org.apache.drill.exec.store.np.NPStoragePlugin;
-import org.apache.drill.exec.store.np.filter.Filter;
 import org.apache.drill.exec.util.Utilities;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @JsonTypeName("np-scan")
@@ -31,7 +29,7 @@ public class NPGroupScan extends AbstractGroupScan {
     private final NPStoragePlugin storagePlugin;
     private final NPScanSpec scanSpec;
     private final List<SchemaPath> columns;
-    private final List<Filter> filters;
+    private final String filters;
     
     
     public NPGroupScan(NPStoragePlugin storagePlugin,
@@ -41,12 +39,12 @@ public class NPGroupScan extends AbstractGroupScan {
         this.storagePlugin = storagePlugin;
         this.scanSpec = scanSpec;
         this.columns = ALL_COLUMNS;
-        this.filters = new ArrayList<>();
+        this.filters = "";
     }
     
     public NPGroupScan(NPGroupScan from,
                        List<SchemaPath> columns,
-                       List<Filter> filters) {
+                       String filters) {
         super(from);
         
         this.storagePlugin = from.storagePlugin;
@@ -59,7 +57,7 @@ public class NPGroupScan extends AbstractGroupScan {
     public NPGroupScan(@JacksonInject NPStoragePlugin storagePlugin,
                        @JsonProperty("columns") List<SchemaPath> columns,
                        @JsonProperty("scanSpec") NPScanSpec scanSpec,
-                       @JsonProperty("filters") List<Filter> filters) {
+                       @JsonProperty("filters") String filters) {
         super("no-user");
         
         this.storagePlugin = storagePlugin;
@@ -160,7 +158,7 @@ public class NPGroupScan extends AbstractGroupScan {
     }
     
     @JsonProperty("filters")
-    public List<Filter> getFilters() {
+    public String getFilters() {
         return filters;
     }
 }

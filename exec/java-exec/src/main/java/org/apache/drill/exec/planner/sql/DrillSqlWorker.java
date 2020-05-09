@@ -17,8 +17,6 @@
  */
 package org.apache.drill.exec.planner.sql;
 
-import java.io.IOException;
-
 import org.apache.calcite.sql.SqlDescribeSchema;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.SqlLiteral;
@@ -35,6 +33,7 @@ import org.apache.drill.exec.exception.MetadataException;
 import org.apache.drill.exec.ops.QueryContext;
 import org.apache.drill.exec.ops.QueryContext.SqlStatementType;
 import org.apache.drill.exec.physical.PhysicalPlan;
+import org.apache.drill.exec.planner.sql.conversion.SqlConverter;
 import org.apache.drill.exec.planner.sql.handlers.AbstractSqlHandler;
 import org.apache.drill.exec.planner.sql.handlers.AnalyzeTableHandler;
 import org.apache.drill.exec.planner.sql.handlers.DefaultSqlHandler;
@@ -52,7 +51,6 @@ import org.apache.drill.exec.planner.sql.parser.DrillSqlDescribeTable;
 import org.apache.drill.exec.planner.sql.parser.DrillSqlResetOption;
 import org.apache.drill.exec.planner.sql.parser.DrillSqlSetOption;
 import org.apache.drill.exec.planner.sql.parser.SqlSchema;
-import org.apache.drill.exec.planner.sql.conversion.SqlConverter;
 import org.apache.drill.exec.testing.ControlsInjector;
 import org.apache.drill.exec.testing.ControlsInjectorFactory;
 import org.apache.drill.exec.util.Pointer;
@@ -60,6 +58,8 @@ import org.apache.drill.exec.work.foreman.ForemanSetupException;
 import org.apache.drill.exec.work.foreman.SqlUnsupportedException;
 import org.apache.drill.shaded.guava.com.google.common.base.Throwables;
 import org.apache.hadoop.security.AccessControlException;
+
+import java.io.IOException;
 
 public class DrillSqlWorker {
   private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DrillSqlWorker.class);
@@ -167,7 +167,7 @@ public class DrillSqlWorker {
       if (rootCause instanceof MetadataException) {
         // resets SqlStatementType to avoid errors when it is set during further attempts
         context.clearSQLStatementType();
-        switch (((MetadataException) rootCause).getExceptionType()) {
+        switch (((MetadataException) rootCause  ).getExceptionType()) {
           case OUTDATED_METADATA:
             logger.warn("Metastore table metadata is outdated. " +
                 "Retrying to obtain query plan without Metastore usage.");

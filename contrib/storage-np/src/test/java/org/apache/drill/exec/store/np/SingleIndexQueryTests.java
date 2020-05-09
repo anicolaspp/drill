@@ -97,12 +97,12 @@ public class SingleIndexQueryTests extends ClusterTest {
 
     @Test
     public void testFilterPushDownToIndex() throws Exception {
-        String sql = "SELECT _id FROM np.`/user/main` WHERE (value = 5 AND _id > '2') OR _id = 1";
+        String sql = "SELECT * FROM np.`/user/main` WHERE (value = 5 AND _id > 2) AND _id = 1";
     
         QueryBuilder builder = client.queryBuilder().sql(sql);
     
 //        System.out.println(builder.explainText());
     
-        builder.print();
+        assert builder.rowSet().rowCount() == 1;
     }
 }

@@ -11,7 +11,6 @@ import org.apache.drill.exec.physical.base.PhysicalOperator;
 import org.apache.drill.exec.physical.base.PhysicalVisitor;
 import org.apache.drill.exec.physical.base.SubScan;
 import org.apache.drill.exec.store.np.NPScanSpec;
-import org.apache.drill.exec.store.np.filter.Filter;
 import org.apache.drill.shaded.guava.com.google.common.collect.ImmutableSet;
 
 import java.util.Iterator;
@@ -20,17 +19,17 @@ import java.util.Objects;
 
 @JsonTypeName("np-sub-scan")
 public class NPSubScan extends AbstractBase implements SubScan {
-
+    
     private final NPScanSpec scanSpec;
     private final List<SchemaPath> columns;
-    private final List<Filter> filters;
-
+    private final String filters;
+    
     @JsonCreator
     public NPSubScan(@JsonProperty("scanSpec") NPScanSpec scanSpec,
                      @JsonProperty("columns") List<SchemaPath> columns,
-                     @JsonProperty("filters") List<Filter> filters) {
+                     @JsonProperty("filters") String filters) {
         super("user-if-needed");
-
+        
         this.scanSpec = scanSpec;
         this.columns = columns;
         this.filters = filters;
@@ -40,22 +39,22 @@ public class NPSubScan extends AbstractBase implements SubScan {
     public <T, X, E extends Throwable> T accept(PhysicalVisitor<T, X, E> physicalVisitor, X value) throws E {
         return physicalVisitor.visitSubScan(this, value);
     }
-
+    
     @Override
     public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) throws ExecutionSetupException {
         return new NPSubScan(scanSpec, columns, filters);
     }
-
+    
     @Override
     public int getOperatorType() {
         return 90;
     }
-
+    
     @Override
     public Iterator<PhysicalOperator> iterator() {
         return ImmutableSet.<PhysicalOperator>of().iterator();
     }
-
+    
     @Override
     public String toString() {
         return new PlanStringBuilder(this)
@@ -64,12 +63,12 @@ public class NPSubScan extends AbstractBase implements SubScan {
                 .field("filters", filters)
                 .toString();
     }
-
+    
     @Override
     public int hashCode() {
         return Objects.hash(scanSpec, columns, filters);
     }
-
+    
     @Override
     public boolean equals(Object obj) {
         if (this == obj) {
@@ -83,19 +82,19 @@ public class NPSubScan extends AbstractBase implements SubScan {
                 && Objects.equals(columns, other.columns)
                 && Objects.equals(filters, other.filters);
     }
-
+    
     @JsonProperty("scanSpec")
     public NPScanSpec getScanSpec() {
         return scanSpec;
     }
-
+    
     @JsonProperty("columns")
     public List<SchemaPath> getColumns() {
         return columns;
     }
-
+    
     @JsonProperty("filters")
-    public List<Filter> getFilters() {
-        return filters;
+    public String getFilters() {
+        return filters.isEmpty() ? "{}" : filters;
     }
 }

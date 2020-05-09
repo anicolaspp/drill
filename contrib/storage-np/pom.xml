@@ -68,6 +68,12 @@
       <version>1.0.12</version>
     </dependency>
 
+    <dependency>
+      <groupId>com.github.anicolaspp</groupId>
+      <artifactId>ojai-scala-generics_2.11</artifactId>
+      <version>1.0.0</version>
+    </dependency>
+
     <!-- Test dependencie -->
     <dependency>
       <groupId>org.apache.drill.exec</groupId>
