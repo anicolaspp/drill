@@ -1,5 +1,6 @@
 package org.apache.drill.exec.store.np.read;
 
+import org.apache.drill.exec.store.np.filter.Filter;
 import org.apache.drill.exec.store.np.ojai.ConnectionProvider;
 import org.apache.drill.exec.store.np.scan.NPSubScan;
 import org.ojai.Document;
@@ -9,7 +10,7 @@ import org.ojai.store.Query;
 import org.ojai.store.QueryCondition;
 
 import java.util.Iterator;
-import java.util.Map;
+import java.util.List;
 
 /**
  * In charge of querying the OJAI source and returning Documents.
@@ -48,12 +49,13 @@ public class OJAIRowGenerator implements RowGenerator<Document>, ConnectionProvi
      * @param filters filters to be applied.
      * @return QueryCondition to be pushed down. s
      */
-    private QueryCondition queryWithFilters(Map<String, String> filters) {
+    private QueryCondition queryWithFilters(List<Filter> filters) {
         
         QueryCondition andQuery = connection.newCondition().and();
         
-        filters.forEach((k, v) -> andQuery.condition(
-                connection.newCondition().is(k, QueryCondition.Op.EQUAL, Integer.parseInt(v)).build()
+        filters.forEach(filter -> andQuery.condition(
+                connection.newCondition()
+                        .is(filter.getColumn(), QueryCondition.Op.EQUAL, filter.getValue().toString()).build()
         ));
         
         return andQuery.close().build();

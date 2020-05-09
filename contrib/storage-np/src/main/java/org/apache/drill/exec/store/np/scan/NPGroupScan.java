@@ -18,12 +18,12 @@ import org.apache.drill.exec.planner.logical.DrillScanRel;
 import org.apache.drill.exec.proto.CoordinationProtos;
 import org.apache.drill.exec.store.np.NPScanSpec;
 import org.apache.drill.exec.store.np.NPStoragePlugin;
+import org.apache.drill.exec.store.np.filter.Filter;
 import org.apache.drill.exec.util.Utilities;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 @JsonTypeName("np-scan")
 public class NPGroupScan extends AbstractGroupScan {
@@ -31,7 +31,7 @@ public class NPGroupScan extends AbstractGroupScan {
     private final NPStoragePlugin storagePlugin;
     private final NPScanSpec scanSpec;
     private final List<SchemaPath> columns;
-    private final Map<String, String> filters;
+    private final List<Filter> filters;
     
     
     public NPGroupScan(NPStoragePlugin storagePlugin,
@@ -41,12 +41,12 @@ public class NPGroupScan extends AbstractGroupScan {
         this.storagePlugin = storagePlugin;
         this.scanSpec = scanSpec;
         this.columns = ALL_COLUMNS;
-        this.filters = new HashMap<>();
+        this.filters = new ArrayList<>();
     }
     
     public NPGroupScan(NPGroupScan from,
                        List<SchemaPath> columns,
-                       Map<String, String> filters) {
+                       List<Filter> filters) {
         super(from);
         
         this.storagePlugin = from.storagePlugin;
@@ -59,7 +59,7 @@ public class NPGroupScan extends AbstractGroupScan {
     public NPGroupScan(@JacksonInject NPStoragePlugin storagePlugin,
                        @JsonProperty("columns") List<SchemaPath> columns,
                        @JsonProperty("scanSpec") NPScanSpec scanSpec,
-                       @JsonProperty("filters") Map<String, String> filters) {
+                       @JsonProperty("filters") List<Filter> filters) {
         super("no-user");
         
         this.storagePlugin = storagePlugin;
@@ -160,7 +160,7 @@ public class NPGroupScan extends AbstractGroupScan {
     }
     
     @JsonProperty("filters")
-    public Map<String, String> getFilters() {
+    public List<Filter> getFilters() {
         return filters;
     }
 }
