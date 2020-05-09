@@ -97,7 +97,8 @@ public class SingleIndexQueryTests extends ClusterTest {
 
     @Test
     public void testFilterPushDownToIndex() throws Exception {
-        String sql = "SELECT * FROM np.`/user/main` WHERE (value = 5 AND _id > 5) OR _id = 1";
+//        String sql = "SELECT value FROM np.`/user/main` WHERE (value = 5 AND _id > 5) OR _id = 1";
+        String sql = "SELECT value FROM np.`/user/main`";
     
         QueryBuilder builder = client.queryBuilder().sql(sql);
     

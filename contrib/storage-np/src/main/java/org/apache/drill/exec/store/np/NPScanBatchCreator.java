@@ -21,7 +21,6 @@ public class NPScanBatchCreator implements BatchCreator<NPSubScan> {
     public CloseableRecordBatch getBatch(ExecutorFragmentContext context, NPSubScan subScan, List<RecordBatch> children) throws ExecutionSetupException {
         Preconditions.checkArgument(children.isEmpty());
         
-        
         return createBuilder(context.getOptions(), subScan)
                 .buildScanOperator(context, subScan);
     }

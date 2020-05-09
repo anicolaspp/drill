@@ -44,7 +44,7 @@ class NPScanPushDownListener implements FilterPushDownListener.ScanPushDownListe
     
         System.out.println(ojaiJsonQuery);
         
-        GroupScan groupScanWithFilters = new NPGroupScan(scan, scan.getColumns(), ojaiJsonQuery);
+        GroupScan groupScanWithFilters = new NPGroupScan(scan, scan.columns(), ojaiJsonQuery);
         return Pair.of(groupScanWithFilters, Collections.emptyList());
     }
     

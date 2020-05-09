@@ -8,6 +8,7 @@ import org.ojai.store.DocumentStore;
 import org.ojai.store.Query;
 
 import java.util.Iterator;
+import java.util.stream.Collectors;
 
 /**
  * In charge of querying the OJAI source and returning Documents.
@@ -30,7 +31,18 @@ public class OJAIRowGenerator implements RowGenerator<Document>, ConnectionProvi
     
         String jsonQuery = connection.newDocument(subScan.getFilters()).asJsonString();
         
-        Query query = connection.newQuery().where(jsonQuery).build();
+        String projections = subScan
+                .getColumns()
+                .stream()
+                .filter(col -> !col.toExpr().equals("`**`"))
+                .map(col -> col.getAsNamePart().getName())
+                .collect(Collectors.joining(","));
+                
+        
+        Query query = connection
+                .newQuery()
+                .select(projections)
+                .where(jsonQuery).build();
         
         return store.find(query).iterator();
     }

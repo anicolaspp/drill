@@ -31,7 +31,6 @@ public class NPGroupScan extends AbstractGroupScan {
     private final List<SchemaPath> columns;
     private final String filters;
     
-    
     public NPGroupScan(NPStoragePlugin storagePlugin,
                        NPScanSpec scanSpec) {
         super("no-user");
