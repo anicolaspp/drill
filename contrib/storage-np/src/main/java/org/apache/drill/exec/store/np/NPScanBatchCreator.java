@@ -20,6 +20,8 @@ public class NPScanBatchCreator implements BatchCreator<NPSubScan> {
     @Override
     public CloseableRecordBatch getBatch(ExecutorFragmentContext context, NPSubScan subScan, List<RecordBatch> children) throws ExecutionSetupException {
         Preconditions.checkArgument(children.isEmpty());
+    
+        System.out.println("context.getEndpoint().getControlPort() = " + context.getEndpoint().getControlPort());
         
         return createBuilder(context.getOptions(), subScan)
                 .buildScanOperator(context, subScan);
@@ -35,6 +37,7 @@ public class NPScanBatchCreator implements BatchCreator<NPSubScan> {
         ManagedScanFramework.ReaderFactory readerFactory = new NPReaderFactory(subScan);
         builder.setReaderFactory(readerFactory);
         builder.nullType(Types.optional(TypeProtos.MinorType.VARCHAR));
+        
         
         return builder;
     }

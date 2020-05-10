@@ -23,16 +23,19 @@ public class NPSubScan extends AbstractBase implements SubScan {
     private final NPScanSpec scanSpec;
     private final List<SchemaPath> columns;
     private final String filters;
+    private final Integer subScanId ;
     
     @JsonCreator
     public NPSubScan(@JsonProperty("scanSpec") NPScanSpec scanSpec,
                      @JsonProperty("columns") List<SchemaPath> columns,
-                     @JsonProperty("filters") String filters) {
+                     @JsonProperty("filters") String filters,
+                     @JsonProperty("subScanId") Integer subScanId) {
         super("user-if-needed");
         
         this.scanSpec = scanSpec;
         this.columns = columns;
         this.filters = filters;
+        this.subScanId = subScanId;
     }
     
     @Override
@@ -42,7 +45,7 @@ public class NPSubScan extends AbstractBase implements SubScan {
     
     @Override
     public PhysicalOperator getNewWithChildren(List<PhysicalOperator> children) throws ExecutionSetupException {
-        return new NPSubScan(scanSpec, columns, filters);
+        return new NPSubScan(scanSpec, columns, filters, subScanId);
     }
     
     @Override
@@ -61,6 +64,7 @@ public class NPSubScan extends AbstractBase implements SubScan {
                 .field("scanSpec", scanSpec)
                 .field("columns", columns)
                 .field("filters", filters)
+                .field("scanId", subScanId)
                 .toString();
     }
     
@@ -96,5 +100,10 @@ public class NPSubScan extends AbstractBase implements SubScan {
     @JsonProperty("filters")
     public String getFilters() {
         return filters.isEmpty() ? "{}" : filters;
+    }
+    
+    @JsonProperty("subScanId")
+    public Integer getSubScanId() {
+        return this.subScanId;
     }
 }

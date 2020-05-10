@@ -6,6 +6,7 @@ import org.apache.drill.exec.store.StoragePluginRegistry;
 import org.apache.drill.exec.store.np.ojai.SmartConnectionProvider;
 import org.apache.drill.test.BaseDirTestWatcher;
 import org.apache.drill.test.ClusterFixture;
+import org.apache.drill.test.ClusterFixtureBuilder;
 import org.apache.drill.test.ClusterTest;
 import org.apache.drill.test.QueryBuilder;
 import org.junit.BeforeClass;
@@ -16,6 +17,8 @@ import org.ojai.store.Connection;
 import org.ojai.store.DocumentStore;
 
 import java.util.Iterator;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * This class tests that our plugin loads table using the defined indexing architecture.
@@ -30,7 +33,11 @@ public class SingleIndexQueryTests extends ClusterTest {
 
     @BeforeClass
     public static void setup() throws Exception {
-        ClusterTest.startCluster(ClusterFixture.builder(dirTestWatcher));
+        ClusterFixtureBuilder cluster = ClusterFixture
+                .builder(dirTestWatcher)
+                .clusterSize(2);
+    
+        ClusterTest.startCluster(cluster);
 
         defineNPPlugin();
 
@@ -98,12 +105,10 @@ public class SingleIndexQueryTests extends ClusterTest {
     @Test
     public void testFilterPushDownToIndex() throws Exception {
 //        String sql = "SELECT value FROM np.`/user/main` WHERE (value = 5 AND _id > 5) OR _id = 1";
-        String sql = "SELECT value FROM np.`/user/main`";
+        String sql = "SELECT value, _id FROM np.`/user/main` WHERE _id = 5 OR value > 100";
     
         QueryBuilder builder = client.queryBuilder().sql(sql);
     
-        builder.printCsv();
-        
-        assert builder.rowSet().rowCount() == 2;
+        assertEquals(10, builder.run().recordCount());
     }
 }

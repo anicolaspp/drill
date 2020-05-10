@@ -27,10 +27,12 @@ public class NPReaderFactory implements ManagedScanFramework.ReaderFactory {
     
     @Override
     public ManagedReader<? extends SchemaNegotiator> next() {
-        if (numberOfReader <= 0) {
+        if (numberOfReader == 0) {
             return null;
         }
         
+        System.out.println("NPReaderFactory:next(); subScanId = " + subScan.getSubScanId());
+
         numberOfReader--;
         
         return reader;

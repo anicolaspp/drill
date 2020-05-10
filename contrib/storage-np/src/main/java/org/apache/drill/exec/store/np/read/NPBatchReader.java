@@ -39,8 +39,6 @@ public class NPBatchReader implements ManagedReader<SchemaNegotiator> {
 
     @Override
     public boolean next() {
-        System.out.println("NPBatchReader:next invoked...");
-
         return jsonLoader.readBatch();
     }
 

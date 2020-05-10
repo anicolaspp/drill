@@ -20,11 +20,15 @@ import org.apache.drill.exec.store.np.NPScanSpec;
 import org.apache.drill.exec.store.np.NPStoragePlugin;
 import org.apache.drill.exec.util.Utilities;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
 @JsonTypeName("np-scan")
 public class NPGroupScan extends AbstractGroupScan {
+    
+    private static final Logger logger = LoggerFactory.getLogger(NPGroupScan.class);
     
     private final NPStoragePlugin storagePlugin;
     private final NPScanSpec scanSpec;
@@ -66,20 +70,32 @@ public class NPGroupScan extends AbstractGroupScan {
     }
     
     @Override
-    public void applyAssignments(List<CoordinationProtos.DrillbitEndpoint> endpoints) throws PhysicalOperatorSetupException {
+    public SubScan getSpecificScan(int minorFragmentId) throws ExecutionSetupException {
+        System.out.println(String.format("getSpecificScan with ID: %d invoked...", minorFragmentId));
+        
+        return new NPSubScan(scanSpec, columns, filters, minorFragmentId);
     }
     
     @Override
-    public SubScan getSpecificScan(int minorFragmentId) throws ExecutionSetupException {
-        System.out.println("getSpecificScan invoked...");
-        
-        return new NPSubScan(scanSpec, columns, filters);
+    public boolean canPushdownProjects(List<SchemaPath> columns) {
+        return true;
     }
     
-    @JsonIgnore
     @Override
     public int getMaxParallelizationWidth() {
-        return 1;
+        return 5;
+    }
+    
+    @Override
+    public int getMinParallelizationWidth() {
+            return 4;
+    }
+    
+    @Override
+    public void applyAssignments(List<CoordinationProtos.DrillbitEndpoint> endpoints) throws PhysicalOperatorSetupException {
+        System.out.println(String.format("There are %d brillbits available for assigment", endpoints.size()));
+        
+        endpoints.forEach(bit -> System.out.println(bit.getControlPort()));
     }
     
     @Override
@@ -129,7 +145,6 @@ public class NPGroupScan extends AbstractGroupScan {
     public GroupScan clone(List<SchemaPath> columns) {
         return new NPGroupScan(this, columns, filters);
     }
-    
     
     @Override
     public String toString() {
