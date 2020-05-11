@@ -75,7 +75,7 @@ public class SingleIndexQueryTests extends ClusterTest {
         }
     }
 
-    public static void genIndexes() {
+    public static void genIndexes()  {
         Connection connection = SmartConnectionProvider
                 .getInstance()
                 .connectTo("ojai:anicolaspp:mem");

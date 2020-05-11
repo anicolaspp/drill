@@ -5,9 +5,14 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.mapr.db.MapRDB;
+import com.mapr.db.TabletInfo;
+import com.mongodb.ServerAddress;
+import org.apache.calcite.util.Pair;
 import org.apache.drill.common.PlanStringBuilder;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
 import org.apache.drill.common.expression.SchemaPath;
+import org.apache.drill.exec.physical.EndpointAffinity;
 import org.apache.drill.exec.physical.PhysicalOperatorSetupException;
 import org.apache.drill.exec.physical.base.AbstractGroupScan;
 import org.apache.drill.exec.physical.base.GroupScan;
@@ -16,14 +21,20 @@ import org.apache.drill.exec.physical.base.ScanStats;
 import org.apache.drill.exec.physical.base.SubScan;
 import org.apache.drill.exec.planner.logical.DrillScanRel;
 import org.apache.drill.exec.proto.CoordinationProtos;
+import org.apache.drill.exec.proto.CoordinationProtos.DrillbitEndpoint;
 import org.apache.drill.exec.store.np.NPScanSpec;
 import org.apache.drill.exec.store.np.NPStoragePlugin;
 import org.apache.drill.exec.util.Utilities;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
+import org.apache.drill.shaded.guava.com.google.common.collect.Maps;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @JsonTypeName("np-scan")
 public class NPGroupScan extends AbstractGroupScan {
@@ -88,19 +99,65 @@ public class NPGroupScan extends AbstractGroupScan {
     
     @Override
     public int getMinParallelizationWidth() {
-            return 4;
+        return 4;
     }
+
+//    private Map<Integer>
     
     @Override
     public void applyAssignments(List<CoordinationProtos.DrillbitEndpoint> endpoints) throws PhysicalOperatorSetupException {
         System.out.println(String.format("There are %d brillbits available for assigment", endpoints.size()));
         
         endpoints.forEach(bit -> System.out.println(bit.getControlPort()));
+
+//        HashSet<CoordinationProtos.DrillbitEndpoint> availableBits = Sets.newHashSet(endpoints);
+        
+    
+    }
+    
+    @Override
+    public List<EndpointAffinity> getOperatorAffinity() {
+        
+        
+        Map<String, DrillbitEndpoint> endpointsByAddress =
+                storagePlugin
+                        .getContext()
+                        .getBits()
+                        .stream()
+                        .map(bit -> Pair.of(bit.getAddress(), bit))
+                        .collect(Collectors.toMap(Pair::getKey, Pair::getValue));
+    
+        TabletInfo[] tabletInfos = MapRDB
+                .getTable(scanSpec.getTableName())
+                .getTabletInfos();
+    
+    
+        Map<DrillbitEndpoint, EndpointAffinity> affinityMap = Maps.newHashMap();
+        // As of now, considering only the first replica, though there may be
+        // multiple replicas for each chunk.
+        for (Set<ServerAddress> addressList : tabletInfos) {
+            // Each replica can be on multiple machines, take the first one, which
+            // meets affinity.
+            for (ServerAddress address : addressList) {
+                DrillbitEndpoint ep = endpointMap.get(address.getHost());
+                if (ep != null) {
+                    EndpointAffinity affinity = affinityMap.get(ep);
+                    if (affinity == null) {
+                        affinityMap.put(ep, new EndpointAffinity(ep, 1));
+                    } else {
+                        affinity.addAffinity(1);
+                    }
+                    break;
+                }
+            }
+        }
+    
+        return super.getOperatorAffinity();
     }
     
     @Override
     public String getDigest() {
-        return null;
+        return toString();
     }
     
     @Override
