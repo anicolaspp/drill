@@ -22,7 +22,7 @@ import static org.junit.Assert.assertEquals;
 
 /**
  * This class tests that our plugin loads table using the defined indexing architecture.
- *
+ * <p>
  * One a single index is use in this suit.
  */
 public class SingleIndexQueryTests extends ClusterTest {
@@ -36,7 +36,7 @@ public class SingleIndexQueryTests extends ClusterTest {
         ClusterFixtureBuilder cluster = ClusterFixture
                 .builder(dirTestWatcher)
                 .clusterSize(2);
-    
+
         ClusterTest.startCluster(cluster);
 
         defineNPPlugin();
@@ -75,7 +75,7 @@ public class SingleIndexQueryTests extends ClusterTest {
         }
     }
 
-    public static void genIndexes()  {
+    public static void genIndexes() {
         Connection connection = SmartConnectionProvider
                 .getInstance()
                 .connectTo("ojai:anicolaspp:mem");
@@ -106,9 +106,9 @@ public class SingleIndexQueryTests extends ClusterTest {
     public void testFilterPushDownToIndex() throws Exception {
 //        String sql = "SELECT value FROM np.`/user/main` WHERE (value = 5 AND _id > 5) OR _id = 1";
         String sql = "SELECT value, _id FROM np.`/user/main` WHERE _id = 5 OR value > 100";
-    
+
         QueryBuilder builder = client.queryBuilder().sql(sql);
-    
-        assertEquals(10, builder.run().recordCount());
+
+        assertEquals(1, builder.run().recordCount());
     }
 }

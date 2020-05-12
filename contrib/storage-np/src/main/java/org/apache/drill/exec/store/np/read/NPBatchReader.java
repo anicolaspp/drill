@@ -4,7 +4,6 @@ import org.apache.drill.exec.physical.impl.scan.framework.ManagedReader;
 import org.apache.drill.exec.physical.impl.scan.framework.SchemaNegotiator;
 import org.apache.drill.exec.store.easy.json.loader.JsonLoader;
 import org.apache.drill.exec.store.easy.json.loader.JsonLoaderImpl;
-import org.apache.drill.exec.store.np.scan.NPSubScan;
 
 import java.io.InputStream;
 
@@ -13,17 +12,17 @@ import java.io.InputStream;
  */
 public class NPBatchReader implements ManagedReader<SchemaNegotiator> {
 
-    private NPSubScan subScan;
-
     private JsonLoader jsonLoader;
+    private final ReaderProperties properties;
 
-    public NPBatchReader(NPSubScan subScan) {
-        this.subScan = subScan;
+
+    public NPBatchReader(ReaderProperties props) {
+        this.properties = props;
     }
 
     @Override
     public boolean open(SchemaNegotiator negotiator) {
-        RowGenerator dataGen = new OJAIRowGenerator(subScan);
+        RowGenerator dataGen = new OJAIRowGenerator(properties);
 
         InputStream inStream = dataGen.getRowsInputStream();
 
@@ -48,5 +47,9 @@ public class NPBatchReader implements ManagedReader<SchemaNegotiator> {
             jsonLoader.close();
             jsonLoader = null;
         }
+    }
+
+    public ReaderProperties getProperties() {
+        return this.properties;
     }
 }

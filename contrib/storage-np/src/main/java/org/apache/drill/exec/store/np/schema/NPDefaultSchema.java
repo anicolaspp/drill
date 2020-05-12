@@ -43,11 +43,11 @@ class NPDefaultSchema extends AbstractSchema {
         if (table != null) {
             return table;
         }
-    
+
         if (!isValidTable(tableName)) {
             return null;
         }
-        
+
         return registerTable(tableName,
                 new DynamicDrillTable(
                         plugin,
