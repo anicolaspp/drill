@@ -20,6 +20,12 @@ public class NPReaderFactory implements ManagedScanFramework.ReaderFactory {
         this.readers = getReadersFrom(subScan);
     }
 
+    /**
+     * Creates an Iterator of Readers where each of them reads a tablet that is located at this node.
+     *
+     * @param subScan Presents the associated details needed to created multiple readers.
+     * @return Collections or Readers, each reads a different tablet in parallel.
+     */
     private Iterator<NPBatchReader> getReadersFrom(NPSubScan subScan) {
         return subScan
                 .getTablets()
@@ -50,7 +56,7 @@ public class NPReaderFactory implements ManagedScanFramework.ReaderFactory {
 
         NPBatchReader reader = readers.next();
 
-        System.out.println("NPReaderFactory:next(); subScanId = " + reader.getProperties().getSubScanId());
+        System.out.println("reader.getProperties().getSubScanId() = " + reader.getProperties().getSubScanId());
 
         return reader;
     }
@@ -60,8 +66,8 @@ class ReaderProperties {
     private final String connectionString;
     private final List<SchemaPath> projections;
     private final String ojaiJsonFilters;
-    private String tableName;
-    private Integer subScanId;
+    private final String tableName;
+    private final Integer subScanId;
 
     public ReaderProperties(String connectionString,
                             List<SchemaPath> projections,
