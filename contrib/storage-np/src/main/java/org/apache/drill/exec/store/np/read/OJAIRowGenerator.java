@@ -45,7 +45,10 @@ public class OJAIRowGenerator implements RowGenerator<Document>, ConnectionProvi
         Query query = connection
                 .newQuery()
                 .select(projections)
-                .where(jsonQuery).build();
+                .where(jsonQuery)
+                .build();
+
+        System.out.println("query.asJsonString() = " + query.asJsonString());
 
         return store.find(query).iterator();
     }

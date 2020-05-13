@@ -5,7 +5,6 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.mapr.db.MapRDB;
 import org.apache.calcite.util.Pair;
 import org.apache.drill.common.PlanStringBuilder;
 import org.apache.drill.common.exceptions.ExecutionSetupException;
@@ -29,13 +28,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-import java.util.stream.Collectors;
 
 @JsonTypeName("np-scan")
 public class NPGroupScan extends AbstractGroupScan {
@@ -276,37 +273,5 @@ public class NPGroupScan extends AbstractGroupScan {
         return filters;
     }
 
-    static class TabletInfoProvider {
-        private final List<NPTabletInfo> tablets;
-        private NPScanSpec scanSpec;
-
-        public TabletInfoProvider(NPScanSpec scanSpec) {
-            this.scanSpec = scanSpec;
-
-            this.tablets = getInfo();
-        }
-
-        private List<NPTabletInfo> getInfo() {
-            String connectionString = this.scanSpec.getPluginConfig().getConnection();
-
-            if (connectionString.startsWith("ojai:anicolaspp:mem")) {
-                return Arrays.asList(
-                        new NPTabletInfo("", Lists.newArrayList("192.168.0.190", "localhost2"))
-//                        new NPTabletInfo("", Lists.newArrayList("localhost"))
-                );
-            }
-
-            return Arrays
-                    .stream(MapRDB.getTable(scanSpec.getTableName()).getTabletInfos())
-                    .map(maprTablet -> new NPTabletInfo(
-                            maprTablet.getCondition().asJsonString(),
-                            Arrays.asList(maprTablet.getLocations()))
-                    )
-                    .collect(Collectors.toList());
-        }
-
-        public Collection<NPTabletInfo> getTabletInfos() {
-            return tablets;
-        }
-    }
 }
+
