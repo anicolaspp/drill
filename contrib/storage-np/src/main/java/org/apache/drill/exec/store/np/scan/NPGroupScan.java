@@ -25,7 +25,6 @@ import org.apache.drill.exec.store.np.NPStoragePlugin;
 import org.apache.drill.exec.util.Utilities;
 import org.apache.drill.shaded.guava.com.google.common.base.Preconditions;
 import org.apache.drill.shaded.guava.com.google.common.collect.Lists;
-import org.apache.drill.shaded.guava.com.google.common.collect.Sets;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,6 +34,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.stream.Collectors;
 
 @JsonTypeName("np-scan")
@@ -94,8 +94,6 @@ public class NPGroupScan extends AbstractGroupScan {
 
         ArrayList<NPTabletInfo> tablets = assigments.get(minorFragmentId);
 
-        System.out.println("tabletInfo.size() = " + tablets.size());
-
         return new NPSubScan(scanSpec, columns, filters, minorFragmentId, tablets);
     }
 
@@ -109,10 +107,10 @@ public class NPGroupScan extends AbstractGroupScan {
         return this.tabletInfoProvider.getTabletInfos().size();
     }
 
-//    @Override
-//    public int getMinParallelizationWidth() {
-//        return this.tabletInfoProvider.getTabletInfos().size();
-//    }
+    @Override
+    public int getMinParallelizationWidth() {
+        return this.tabletInfoProvider.getTabletInfos().size();
+    }
 
 
     @Override
@@ -121,59 +119,38 @@ public class NPGroupScan extends AbstractGroupScan {
 
         endpoints.forEach(bit -> System.out.println(bit.getControlPort()));
 
-//        HashSet<CoordinationProtos.DrillbitEndpoint> availableBits = Sets.newHashSet(endpoints);
-
-
         assigments = new HashMap<>();
 
-        if (tabletInfoProvider.getTabletInfos().size() == 0) {
-            String preferredLocation = endpoints.get(0).getAddress();
-            assigments.put(0, Lists.newArrayList(new NPTabletInfo("", Lists.newArrayList(preferredLocation))));
-        } else {
+        Random random = new Random();
 
-            assigments = this
-                    .tabletInfoProvider
-                    .getTabletInfos()
-                    .stream()
-                    .flatMap(tabletInfo -> {
-                        List<Pair<NPTabletInfo, String>> physicalLocations = tabletInfo
-                                .getLocations()
-                                .stream()
-                                .map(location -> Pair.of(new NPTabletInfo(tabletInfo.getFilter(), Lists.newArrayList(location)), location))
-                                .collect(Collectors.toList());
+        tabletInfoProvider.getTabletInfos()
+                .stream()
+                .filter(tabletInfo -> !tryAssigment(endpoints, tabletInfo))
+                .forEach(unsignedTablet -> {
+                    Integer index = random.nextInt() % endpoints.size();
 
-                        if (physicalLocations.size() == 0) {
-                            return Lists
-                                    .newArrayList(Pair.of(
-                                            new NPTabletInfo("", Lists.newArrayList(endpoints.get(0).getAddress())),
-                                            endpoints.get(0).getAddress()))
-                                    .stream();
-                        } else {
-                            return physicalLocations.stream();
-                        }
+                    if (assigments.containsKey(index)) {
+                        assigments.get(index).add(unsignedTablet);
+                    } else {
+                        assigments.put(index, Lists.newArrayList(unsignedTablet));
+                    }
+                });
+    }
 
-                    })
-                    .map(tabletLocation -> {
-                        for (int i = 0; i < endpoints.size(); i++) {
-                            if (endpoints.get(i).getAddress().equals(tabletLocation.getValue())) {
-                                return Pair.of(i, Lists.newArrayList(tabletLocation.getKey()));
-                            }
-                        }
+    private boolean tryAssigment(List<DrillbitEndpoint> endpoints, NPTabletInfo tabletInfo) {
+        for (int i = 0; i < endpoints.size(); i++) {
+            if (endpoints.get(i).getAddress().equals(tabletInfo.getLocations().get(0))) {
+                if (assigments.containsKey(i)) {
+                    assigments.get(i).add(tabletInfo);
+                } else {
+                    assigments.put(i, Lists.newArrayList(tabletInfo));
+                }
 
-                        return Pair.of(0, Lists.newArrayList(tabletLocation.getKey()));
-                    })
-                    .collect(Collectors.toMap(
-                            Pair::getKey,
-                            Pair::getValue,
-                            (tabletInfos, tabletInfos2) -> {
-                                tabletInfos.addAll(tabletInfos2);
-
-                                return Lists.newArrayList(Sets.newHashSet(tabletInfos));
-                            }));
-
-            assigments.forEach((key, value) ->
-                    System.out.println("key = " + key + " value = " + value));
+                return true;
+            }
         }
+
+        return false;
     }
 
     @Override
@@ -218,27 +195,6 @@ public class NPGroupScan extends AbstractGroupScan {
         }
 
         return Lists.newArrayList(affinityMap.values());
-
-        // As of now, considering only the first replica, though there may be
-        // multiple replicas for each chunk.
-//        for (Set<ServerAddress> addressList : tabletInfos) {
-//            // Each replica can be on multiple machines, take the first one, which
-//            // meets affinity.
-//            for (ServerAddress address : addressList) {
-//                DrillbitEndpoint ep = endpointMap.get(address.getHost());
-//                if (ep != null) {
-//                    EndpointAffinity affinity = affinityMap.get(ep);
-//                    if (affinity == null) {
-//                        affinityMap.put(ep, new EndpointAffinity(ep, 1));
-//                    } else {
-//                        affinity.addAffinity(1);
-//                    }
-//                    break;
-//                }
-//            }
-//        }
-
-//        return super.getOperatorAffinity();
     }
 
 
@@ -321,7 +277,7 @@ public class NPGroupScan extends AbstractGroupScan {
     }
 
     static class TabletInfoProvider {
-        private final NPTabletInfo[] tablets;
+        private final List<NPTabletInfo> tablets;
         private NPScanSpec scanSpec;
 
         public TabletInfoProvider(NPScanSpec scanSpec) {
@@ -330,24 +286,27 @@ public class NPGroupScan extends AbstractGroupScan {
             this.tablets = getInfo();
         }
 
-        private NPTabletInfo[] getInfo() {
+        private List<NPTabletInfo> getInfo() {
             String connectionString = this.scanSpec.getPluginConfig().getConnection();
 
             if (connectionString.startsWith("ojai:anicolaspp:mem")) {
-                return new NPTabletInfo[0];
+                return Arrays.asList(
+                        new NPTabletInfo("", Lists.newArrayList("192.168.0.190", "localhost2"))
+//                        new NPTabletInfo("", Lists.newArrayList("localhost"))
+                );
             }
 
-            return (NPTabletInfo[]) Arrays
+            return Arrays
                     .stream(MapRDB.getTable(scanSpec.getTableName()).getTabletInfos())
                     .map(maprTablet -> new NPTabletInfo(
                             maprTablet.getCondition().asJsonString(),
                             Arrays.asList(maprTablet.getLocations()))
                     )
-                    .toArray();
+                    .collect(Collectors.toList());
         }
 
         public Collection<NPTabletInfo> getTabletInfos() {
-            return Arrays.asList(tablets);
+            return tablets;
         }
     }
 }

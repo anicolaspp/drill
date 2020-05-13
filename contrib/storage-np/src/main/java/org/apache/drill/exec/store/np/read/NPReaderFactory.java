@@ -8,6 +8,7 @@ import org.apache.drill.exec.store.np.scan.NPSubScan;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.stream.Stream;
 
 /**
  * Responsible for creating multiple batch readers
@@ -27,6 +28,10 @@ public class NPReaderFactory implements ManagedScanFramework.ReaderFactory {
      * @return Collections or Readers, each reads a different tablet in parallel.
      */
     private Iterator<NPBatchReader> getReadersFrom(NPSubScan subScan) {
+        if (subScan.getTablets() == null) {
+            return Stream.<NPBatchReader>empty().iterator();
+        }
+
         return subScan
                 .getTablets()
                 .stream()
