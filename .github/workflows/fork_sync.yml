@@ -1,8 +1,7 @@
 name: Merge upstream branches
 on:
   schedule:
-     # actually, ~5 minutes is the highest
-     # effective frequency you will get
+      # runs every day a 8:30 EST
     - cron:  '30 12 * * *'
 jobs:
   merge:
