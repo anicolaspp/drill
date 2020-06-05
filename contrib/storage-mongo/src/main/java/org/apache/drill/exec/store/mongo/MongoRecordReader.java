@@ -217,7 +217,7 @@ public class MongoRecordReader extends AbstractRecordReader {
   }
 
   @Override
-  public String toString() {
+  public String toString()  {
     Object reader = isBsonRecordReader ? bsonReader : jsonReader;
     return "MongoRecordReader[reader=" + reader + "]";
   }
